@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect
-from .forms import CustomUserCreationForm, CustomErrorList
+from .forms import CustomUserCreationForm, CustomErrorList, PasswordResetForm
 from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -52,3 +52,22 @@ def orders(request):
     return render(request, 'accounts/orders.html',
         {'template_data': template_data})
 
+def reset_password(request):
+    if request.method == "POST":
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"]
+            new_password = form.cleaned_data["new_password"]
+
+            try:
+                user = User.objects.get(username=username)
+                user.set_password(new_password)
+                user.save()
+                return redirect("accounts.login")
+            except User.DoesNotExist:
+                pass
+    
+    else:
+        form = PasswordResetForm()
+    
+    return render(request, "accounts/reset_password.html", {"form": form})
